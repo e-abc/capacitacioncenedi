@@ -1,10 +1,10 @@
 <?php
 
 require_once('../../config.php');
+require_once($CFG->libdir.'/adminlib.php');
 global $PAGE, $OUTPUT;
 
-$PAGE->set_url($CFG->wwwroot.'/local/example/view.php');
-$PAGE->set_context(context_system::instance());
+admin_externalpage_setup('test');
 
 echo $OUTPUT->header();
 
