@@ -15,6 +15,7 @@ services:
           - ./local:/var/www/html/local
           - ./theme/cursoscenedi33:/var/www/html/theme/cursoscenedi33
     environment:
+          #WWWROOT: http://capacitacion.it.e-abclearning.com
           WWWROOT: http://localhost:3500
           DBTYPE: mariadb
           DBHOST: capcenadidb     # db container name
