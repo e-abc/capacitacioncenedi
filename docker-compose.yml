@@ -1,0 +1,31 @@
+version: '3'
+services:
+  mariadb:
+    image: registry.gitlab.com/dockereabc/mariadb:MOODLE_33
+    container_name: capcenadidb
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: capcenadi
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: 123456
+  moodle33:
+    image: registry.gitlab.com/dockereabc/moodle:MOODLE_33
+    container_name: capcenadi
+    volumes:
+          - ./local:/var/www/html/local
+          - ./theme/cursoscenedi33:/var/www/html/theme/cursoscenedi33
+    environment:
+          WWWROOT: http://localhost:3500
+          DBTYPE: mariadb
+          DBHOST: capcenadidb     # db container name
+          DBNAME: capcenadi   # same as MYSQL_DATABASE
+          DBUSER: dbuser    # same as MYSQL_USER
+          DBPASS: 123456    # same as MYSQL_PASSWORD
+          DBPORT: 3306
+          DBSOCKET: 1
+          MDLPREFIX: mdl_
+          LANG: es
+    ports:
+      - '3500:80'
+    depends_on:
+      - mariadb

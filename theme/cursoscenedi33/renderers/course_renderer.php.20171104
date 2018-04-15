@@ -1,0 +1,433 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+
+/**
+ * @package    theme_cursoscenedi33
+ * @copyright  2015 onwards LMSACE Dev Team (http://www.lmsace.com)
+ * @author    LMSACE Dev Team
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . "/course/renderer.php");
+
+/**
+ * cursoscenedi33 core course renderer renderer from the moodle core course renderer
+ * @copyright  2015 onwards LMSACE Dev Team (http://www.lmsace.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class theme_cursoscenedi33_core_course_renderer extends core_course_renderer {
+
+    /**
+     * Overrite the course  box.
+     * @param coursecat_helper $chelper
+     * @param type|array $course
+     * @param type|string $additionalclasses
+     * @return type
+     */
+    protected function coursecat_coursebox(coursecat_helper $chelper, $course, $additionalclasses = '') {
+        global $CFG;
+
+        if (!isset($this->strings->summary)) {
+            $this->strings->summary = get_string('summary');
+        }
+        if ($chelper->get_show_courses() <= self::COURSECAT_SHOW_COURSES_COUNT) {
+            return '';
+        }
+        if ($course instanceof stdClass) {
+            require_once($CFG->libdir. '/coursecatlib.php');
+            $course = new \course_in_list($course);
+        }
+
+        $classes = trim('coursebox clearfix '. $additionalclasses);
+        if ($chelper->get_show_courses() >= self::COURSECAT_SHOW_COURSES_EXPANDED) {
+            $nametag = 'h3';
+        } else {
+            $classes .= ' collapsed';
+            $nametag = 'div';
+        }
+
+        // course name
+        $coursename = $chelper->get_course_formatted_name($course);
+        $coursenamelink = html_writer::link(new moodle_url('/course/view.php', array('id' => $course->id)),
+            $coursename, array('class' => $course->visible ? '' : 'dimmed'));
+
+        // If we display course in collapsed form but the course has summary or course contacts, display the link to the info page.
+        $moreinfo = html_writer::start_tag('div', array('class' => 'moreinfo'));
+        if ($chelper->get_show_courses() < self::COURSECAT_SHOW_COURSES_EXPANDED) {
+            if ($course->has_summary() || $course->has_course_contacts() || $course->has_course_overviewfiles()) {
+                $url = new moodle_url('/course/info.php', array('id' => $course->id));
+                $image = html_writer::empty_tag('img', array('src' => $this->output->image_url('i/info'),
+                    'alt' => $this->strings->summary));
+                $moreinfo .= html_writer::link($url, $image, array('title' => $this->strings->summary));
+                // Make sure JS file to expand course content is included.
+                $this->coursecat_include_js();
+            }
+        }
+        $moreinfo .= html_writer::end_tag('div'); // .moreinfo
+
+        // print enrolmenticons
+        $enrolmenticons = '';
+        if ($icons = enrol_get_course_info_icons($course)) {
+            $enrolmenticons .= html_writer::start_tag('div', array('class' => 'enrolmenticons'));
+            foreach ($icons as $pix_icon) {
+                $enrolmenticons .= $this->render($pix_icon);
+            }
+            $enrolmenticons .= html_writer::end_tag('div'); // .enrolmenticons
+        }
+
+        $data = new \stdClass();
+        $data->classes = $classes;
+        $data->courseid = $course->id;
+        $data->type = self::COURSECAT_TYPE_COURSE;
+        $data->courselink = html_writer::tag($nametag, $coursenamelink, array('class' => 'coursename'));
+        $data->moreinfo = $moreinfo;
+        $data->enrolmenticons = $enrolmenticons;
+        $data->content = $this->coursecat_coursebox_content($chelper, $course);
+        return $this->render_from_template('theme_cursoscenedi33/coursebox', $data);
+    }
+
+    /**
+     * Returns HTML to display course content (summary, course contacts and optionally category name)
+     *
+     * This method is called from coursecat_coursebox() and may be re-used in AJAX
+     *
+     * @param coursecat_helper $chelper various display options
+     * @param stdClass|course_in_list $course
+     * @return string
+     */
+    protected function coursecat_coursebox_content(coursecat_helper $chelper, $course) {
+        global $CFG;
+        if ($chelper->get_show_courses() < self::COURSECAT_SHOW_COURSES_EXPANDED) {
+            return '';
+        }
+        if ($course instanceof stdClass) {
+            require_once($CFG->libdir. '/coursecatlib.php');
+            $course = new course_in_list($course);
+        }
+        $content = '';
+
+        // display course overview files
+        $contentimages = $contentfiles = '';
+        foreach ($course->get_course_overviewfiles() as $file) {
+            $isimage = $file->is_valid_image();
+            $url = file_encode_url("$CFG->wwwroot/pluginfile.php",
+                '/'. $file->get_contextid(). '/'. $file->get_component(). '/'.
+                $file->get_filearea(). $file->get_filepath(). $file->get_filename(), !$isimage);
+            if ($isimage) {
+                $contentimages .= html_writer::tag('div',
+                    html_writer::empty_tag('img', array('src' => $url)),
+                    array('class' => 'courseimage'));
+            } else {
+                $image = $this->output->pix_icon(file_file_icon($file, 24), $file->get_filename(), 'moodle');
+                $filename = html_writer::tag('span', $image, array('class' => 'fp-icon')).
+                    html_writer::tag('span', $file->get_filename(), array('class' => 'fp-filename'));
+                $contentfiles .= html_writer::tag('span',
+                    html_writer::link($url, $filename),
+                    array('class' => 'coursefile fp-filename-icon'));
+            }
+        }
+        $content .= $contentimages. $contentfiles;
+
+        // display course summary
+        if ($course->has_summary()) {
+            $content .= html_writer::start_tag('div', array('class' => 'summary'));
+            $content .= $chelper->get_course_formatted_summary($course,
+                array('newlines' => false, 'noclean' => true, 'para' => false));
+            $content .= html_writer::end_tag('div'); // .summary
+        }
+
+        // display course contacts. See course_in_list::get_course_contacts()
+        if ($course->has_course_contacts()) {
+            $content .= html_writer::start_tag('ul', array('class' => 'teachers'));
+            foreach ($course->get_course_contacts() as $userid => $coursecontact) {
+                $name = $coursecontact['rolename'].': '.
+                    html_writer::link(new moodle_url('/user/view.php',
+                        array('id' => $userid, 'course' => SITEID)),
+                        $coursecontact['username']);
+                $content .= html_writer::tag('li', $name);
+            }
+            $content .= html_writer::end_tag('ul'); // .teachers
+        }
+
+        // display course category if necessary (for example in search results)
+        if ($chelper->get_show_courses() == self::COURSECAT_SHOW_COURSES_EXPANDED_WITH_CAT) {
+            require_once($CFG->libdir. '/coursecatlib.php');
+            if ($cat = coursecat::get($course->category, IGNORE_MISSING)) {
+                $content .= html_writer::start_tag('div', array('class' => 'coursecat'));
+                $content .= get_string('category').': '.
+                    html_writer::link(new moodle_url('/course/index.php', array('categoryid' => $cat->id)),
+                        $cat->get_formatted_name(), array('class' => $cat->visible ? '' : 'dimmed'));
+                $content .= html_writer::end_tag('div'); // .coursecat
+            }
+        }
+
+        return $content;
+    }
+    
+    /**
+     * Renders the list of courses
+     *
+     * This is internal function, please use {@link core_course_renderer::courses_list()} or another public
+     * method from outside of the class
+     *
+     * If list of courses is specified in $courses; the argument $chelper is only used
+     * to retrieve display options and attributes, only methods get_show_courses(),
+     * get_courses_display_option() and get_and_erase_attributes() are called.
+     *
+     * @param coursecat_helper $chelper various display options
+     * @param array $courses the list of courses to display
+     * @param int|null $totalcount total number of courses (affects display mode if it is AUTO or pagination if applicable),
+     *     defaulted to count($courses)
+     * @return string
+     */
+    protected function coursecat_courses(coursecat_helper $chelper, $courses, $totalcount = null) {
+        global $CFG, $PAGE, $DB;
+
+        /*
+        if ($totalcount === null) {
+            $totalcount = count($courses);
+        }
+        if (!$totalcount) {
+            // Courses count is cached during courses retrieval.
+            return '';
+        }
+
+        if ($chelper->get_show_courses() == self::COURSECAT_SHOW_COURSES_AUTO) {
+            // In 'auto' course display mode we analyse if number of courses is more or less than $CFG->courseswithsummarieslimit
+            if ($totalcount <= $CFG->courseswithsummarieslimit) {
+                $chelper->set_show_courses(self::COURSECAT_SHOW_COURSES_EXPANDED);
+            } else {
+                $chelper->set_show_courses(self::COURSECAT_SHOW_COURSES_COLLAPSED);
+            }
+        }
+
+        // prepare content of paging bar if it is needed
+        $paginationurl = $chelper->get_courses_display_option('paginationurl');
+        $paginationallowall = $chelper->get_courses_display_option('paginationallowall');
+        if ($totalcount > count($courses)) {
+            // there are more results that can fit on one page
+            if ($paginationurl) {
+                // the option paginationurl was specified, display pagingbar
+                $perpage = $chelper->get_courses_display_option('limit', $CFG->coursesperpage);
+                $page = $chelper->get_courses_display_option('offset') / $perpage;
+                $pagingbar = $this->paging_bar($totalcount, $page, $perpage,
+                        $paginationurl->out(false, array('perpage' => $perpage)));
+                if ($paginationallowall) {
+                    $pagingbar .= html_writer::tag('div', html_writer::link($paginationurl->out(false, array('perpage' => 'all')),
+                            get_string('showall', '', $totalcount)), array('class' => 'paging paging-showall'));
+                }
+            } else if ($viewmoreurl = $chelper->get_courses_display_option('viewmoreurl')) {
+                // the option for 'View more' link was specified, display more link
+                $viewmoretext = $chelper->get_courses_display_option('viewmoretext', new lang_string('viewmore'));
+                $morelink = html_writer::tag('div', html_writer::link($viewmoreurl, $viewmoretext),
+                        array('class' => 'paging paging-morelink'));
+            }
+        } else if (($totalcount > $CFG->coursesperpage) && $paginationurl && $paginationallowall) {
+            // there are more than one page of results and we are in 'view all' mode, suggest to go back to paginated view mode
+            $pagingbar = html_writer::tag('div', html_writer::link($paginationurl->out(false, array('perpage' => $CFG->coursesperpage)),
+                get_string('showperpage', '', $CFG->coursesperpage)), array('class' => 'paging paging-showperpage'));
+        }
+
+        // display list of courses
+        /*
+        $attributes = $chelper->get_and_erase_attributes('courses');
+        $content = html_writer::start_tag('div', $attributes);
+
+        if (!empty($pagingbar)) {
+            $content .= $pagingbar;
+        }
+
+        $coursecount = 0;
+        foreach ($courses as $course) {
+            $coursecount ++;
+            $classes = ($coursecount%2) ? 'odd' : 'even';
+            if ($coursecount == 1) {
+                $classes .= ' first';
+            }
+            if ($coursecount >= count($courses)) {
+                $classes .= ' last';
+            }
+            $content .= $this->coursecat_coursebox($chelper, $course, $classes);
+        }
+        */
+        
+        
+        /////////////////////////////////////////// e-ABC 20171005 cursos destacados ////////////////////////////////////////////
+        
+        //Que cursos muestro?
+        
+        //a eleccion del administrador
+        $fcoursesenabled = false;
+        $typefcourses = 0;
+        $limitcourses = 3;
+        $myselection = '';
+
+        if(!empty($PAGE->theme->settings->enable)){
+            $fcoursesenabled = $PAGE->theme->settings->enable;
+            if(!empty($PAGE->theme->settings->typefcourses)){
+                $typefcourses = $PAGE->theme->settings->typefcourses;
+            }
+            if(!empty($PAGE->theme->settings->howmanyfcourses)){
+                $limitcourses = $PAGE->theme->settings->howmanyfcourses;
+            }
+        }
+        
+        $nodata = false;
+        $searchcourses = array();
+        $courses = array();
+        //var_dump($typefcourses);exit;
+        switch ($typefcourses) {
+            case 0:
+                $nodata = true;
+                break;
+            case 1:
+                //more user enrol
+                $query = "SELECT c.id , count(userid) as usuarios
+                            FROM mdl_role_assignments ra
+                            join mdl_context co on co.id = ra.contextid
+                            join mdl_course c on c.id = co.instanceid
+                            WHERE co.contextlevel = 50
+                            and roleid = 5
+                            GROUP BY c.fullname
+                            HAVING count(userid) > 0
+                            ORDER BY count(userid) desc
+                            LIMIT ".$limitcourses;
+                $searchcourses = $DB->get_records_sql($query);
+                
+                break;
+            case 2:
+                $query = "SELECT c.id , count(ul.userid)
+                            FROM mdl_user_lastaccess ul
+                            join mdl_course c on c.id = ul.courseid
+                            GROUP BY c.fullname
+                            HAVING count(ul.userid) > 0
+                            ORDER BY count(ul.userid) desc
+                            LIMIT ".$limitcourses;
+                $searchcourses = $DB->get_records_sql($query);
+                break;
+            case 3:
+                $courses = array();
+                $course = false;
+                //break;
+                if(!empty($PAGE->theme->settings->selection)){
+                    $myselection = $PAGE->theme->settings->selection;
+                }
+                //var_dump($courses); //exit;
+                if(!empty($myselection)){
+                    $shortnames = array();
+                    $shortnames = explode("\n",$myselection);
+                    //var_dump($shortnames);exit;
+                    if(!empty($shortnames)){
+                        foreach($shortnames as $key => $value){
+                            $course = $DB->get_record('course',array('shortname'=>trim($value)));
+                            //echo "<pre>curso info: ".$value."</pre>";
+                            //var_dump($course);//exit;
+                            if($course){
+                                $course = new course_in_list($course);
+                                $searchcourses[] = $course;
+                            }
+                            $course = false;
+                        }
+                    }
+                }
+                
+                break;
+            case 4:
+                $searchcourses = array();
+                $course = false;
+                if(!empty($PAGE->theme->settings->tagcourses)){
+                    $tag = $PAGE->theme->settings->tagcourses;
+                }
+                /*
+                echo "<br><br><br><br><br><br><br><br><br><br><pre>";
+                var_dump($tag);
+                exit;
+                */
+
+                //busco el tag y los cursos con ese tag
+                $query = "select distinct ti.id as id, t.name as tag, ti.itemid as courseid
+                            from {tag} t 
+                            join {tag_instance} ti on ti.tagid = t.id
+                            where ti.itemtype = 'course'
+                            and t.name = '".$tag."'";
+                $tagcourses = $DB->get_records_sql($query);
+
+                foreach ($tagcourses as $tagcourse) {
+                    $course = $DB->get_record('course',array('id'=>$tagcourse->courseid));
+                    $context = context_course::instance($course->id);
+                    if($course && is_enrolled($context,null,'',true)){
+                        $course = new course_in_list($course);
+                        $searchcourses[] = $course;
+                    }
+                    $course = false;
+                }
+                break;
+        }
+        
+        //var_dump($searchcourses);exit;
+        //exit;
+        //preparo el array de cursos
+        if(!empty($searchcourses) /*&& empty($courses)*/){
+            foreach($searchcourses as $searchcourse){
+                $course = $DB->get_record('course',array('id'=>$searchcourse->id));
+                if($course){
+                    $courses[] = $course;
+                }
+            }  
+        }
+        
+        //var_dump($PAGE->theme->settings);exit;
+        if($fcoursesenabled){
+            /*
+            $content .= html_writer::start_tag('h2', $attributes);
+            $content .= get_string('cursosdestacados','theme_cursoscenedi33');
+            $content .= html_writer::end_tag('h2', $attributes);
+            */
+            $adminselection = false;
+            if($adminselection){
+                $fcourses = array();
+            }
+
+            //cuantos cursos muestro?
+            
+            //lista de cursos de prueba
+            foreach ($searchcourses as $searchcourse) {
+                $coursecount ++;
+                $classes = ($coursecount%2) ? 'odd' : 'even';
+                if ($coursecount == 1) {
+                    $classes .= ' first';
+                }
+                if ($coursecount >= count($searchcourses)) {
+                    $classes .= ' last';
+                }
+                $content .= $this->coursecat_coursebox($chelper, $searchcourse, $classes);
+            }
+        }
+
+        if (!empty($pagingbar)) {
+            $content .= $pagingbar;
+        }
+        if (!empty($morelink)) {
+            $content .= $morelink;
+        }
+
+        $content .= html_writer::end_tag('div'); // .courses
+        return $content;
+    }
+}

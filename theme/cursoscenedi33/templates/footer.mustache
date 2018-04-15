@@ -1,0 +1,147 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template theme_cursoscenedi33/footer
+
+    Admin time setting template.
+
+    cursoscenedi33 footer layout template.
+}}
+<footer id="page-footer" class="p-y-1 bg-inverse">
+    <div id="footer">
+    <div class="footer-main">
+    <div class="container">
+        <div class="row">
+
+
+<div class="col-md-6">
+            <div class="infoarea">
+            {{# footlogo}}
+            <div class="footer-logo">
+                <a href="{{{ config.wwwroot }}}/?redirect=0"><img src="/theme/cursoscenedi33/pix/logo_footer.png" alt="cursoscenedi33"></a>
+            </div>
+            {{/ footlogo}}
+                {{{footnote}}}
+          </div>
+          <div class="social-media">
+            <ul>
+
+ <!-- 01. FACEBOOK -->           
+             {{# fburl}}
+                <li class="smedia-01"><a href="{{fburl}}">
+                  <!-- circulo -->
+                      <span class="fa-stack fa-lg">
+                        <i class="fa fa-circle fa-stack-2x"></i>
+                        <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                      </span>
+                  <!-- Fin  circulo -->
+                </a></li>
+            {{/ fburl}}
+<!-- 01. FACEBOOK - END -->
+
+ <!-- {{# pinurl}}
+               <li class="smedia-02"><a href="{{pinurl}}"><i class="fa fa-pinterest-square"></i></a></li>
+            {{/ pinurl}}
+-->
+
+ <!-- 02. TWITTER -->
+            {{# twurl}}
+                <li class="smedia-03"><a href="{{twurl}}">
+                  <!-- circulo -->
+                      <span class="fa-stack fa-lg">
+                        <i class="fa fa-circle fa-stack-2x"></i>
+                        <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                      </span>
+                  <!-- Fin  circulo -->
+                </a></li>
+            {{/ twurl}}
+ <!-- 02. TWITTER - END-->
+
+ <!-- 03. GOOGLE + -->
+            {{# gpurl}}
+                 <li class="smedia-04"><a href="{{gpurl}}"> 
+                    <!-- circulo -->
+                      <span class="fa-stack fa-lg">
+                        <i class="fa fa-circle fa-stack-2x"></i>
+                        <i class="fa fa-google-plus fa-stack-1x fa-inverse"></i>
+                      </span>
+                       <!-- Fin  circulo --></a></li>
+            {{/ gpurl}}
+ <!-- 03. GOOGLE + END -->
+
+
+ <!-- 04. INSTAGRAM -->
+            <li class="smedia-05">
+                  <a href="https://www.instagram.com/cenedi.educacion/">
+                      <!-- circulo -->
+                      <span class="fa-stack fa-lg">
+                        <i class="fa fa-circle fa-stack-2x"></i>
+                        <i class="fa fa-instagram fa-stack-1x fa-inverse"></i>
+                      </span>
+                       <!-- Fin  circulo -->
+                  </a>
+            </li>
+<!-- 04. INSTAGRAM - END-->
+            </ul>
+          </div>
+</div>
+
+
+
+
+
+<div class="col-md-6">
+          <div class="contact-info">
+            <h2 class="nopadding">Contáctenos</h2>
+
+             <p>
+            {{# phoneno}}
+              <i class="fa fa-phone-square"></i> Teléfono : {{phoneno}}<br>
+            {{/ phoneno}}
+            {{# emailid}}
+              <i class="fa fa-envelope"></i> {{email}} : <a class="mail-link" href="mailto:{{emailid}}">{{emailid}}</a><br>
+            {{/ emailid}}
+            {{# address}}{{address}}{{/ address}}
+            </p>
+
+          </div>
+         {{# url}}
+        {{/ url}}
+</div>
+
+        
+
+        
+        
+      </div>
+    </div>
+  </div>
+
+  </div>
+</footer>
+<!--E.O.Footer-->
+
+<footer>
+{{{output.standard_footer_html}}}
+</footer>
+{{{output.standard_end_of_body_html}}}
+{{#js}}
+require(['theme_boost/loader']);
+require(['theme_boost/drawer'], function(mod) {
+    mod.init();
+});
+{{/js}}
