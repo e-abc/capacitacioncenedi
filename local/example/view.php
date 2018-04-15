@@ -12,9 +12,9 @@ $renderer = $PAGE->get_renderer('local_example');
 
 $config = get_config('local_example', 'config');
 
-$user = $DB->get_record('user', array('id' => 1));
+$user = $DB->get_record('user', array('id' => 3));
 
-echo $renderer->print_hello();
+echo $renderer->print_hello($user);
 
 echo $config;
 
