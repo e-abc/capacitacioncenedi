@@ -8,6 +8,8 @@ admin_externalpage_setup('test');
 
 echo $OUTPUT->header();
 
-echo 'hola mundo';
+$config = get_config('local_example', 'config');
+
+echo $config;
 
 echo $OUTPUT->footer();
