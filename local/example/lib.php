@@ -15,7 +15,7 @@ function local_example_extend_navigation(global_navigation $navigation) {
     $node->classes = array('localexample');
     $node->key = 'localexample';
 
-    if (isset($node)) {
+    if (isset($node) && has_capability('local/example:viewexample', context_system::instance())) {
         $navigation->add_node($node);
     }
     

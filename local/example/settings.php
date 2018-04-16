@@ -1,6 +1,6 @@
 <?php
 
-$externalpage = new admin_externalpage('test', 'Enlace local example', $CFG->wwwroot.'/local/example/view.php');
+$externalpage = new admin_externalpage('test', 'Enlace local example', $CFG->wwwroot.'/local/example/view.php', 'local/example:viewexample');
 
 $ADMIN->add('frontpage', $externalpage);
 
