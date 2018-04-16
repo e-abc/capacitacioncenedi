@@ -16,6 +16,8 @@ $user = $DB->get_record('user', array('id' => 3));
 
 echo $renderer->print_hello($user);
 
+$PAGE->requires->js_call_amd('local_example/index', 'init', array('pais' => 'Argentina'));
+
 echo $config;
 
 echo $OUTPUT->footer();
