@@ -1,35 +1,24 @@
 version: '3'
 services:
   mariadb:
-    image: registry.gitlab.com/dockereabc/mariadb:MOODLE_33
-    container_name: capcenadidb
+    image: mariadb
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: 1
-      MYSQL_DATABASE: capcenadi
-      MYSQL_USER: dbuser
-      MYSQL_PASSWORD: 123456
-  moodle33:
-    image: registry.gitlab.com/dockereabc/moodle:MOODLE_33
-    container_name: capcenadi
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: $MYSQL_DATABASE
+  moodle:
+    image: registry.gitlab.com/dockereabc/dockerfiles:${TAG}
     volumes:
-          - ./local:/var/www/html/local
-          - ./theme/cursoscenedi33:/var/www/html/theme/cursoscenedi33
-          - data-volume:/var/www/moodledata
-    environment:
-          #WWWROOT: http://capacitacion.it.e-abclearning.com
-          WWWROOT: http://localhost:3500
-          DBTYPE: mariadb
-          DBHOST: capcenadidb     # db container name
-          DBNAME: capcenadi   # same as MYSQL_DATABASE
-          DBUSER: dbuser    # same as MYSQL_USER
-          DBPASS: 123456    # same as MYSQL_PASSWORD
-          DBPORT: 3306
-          DBSOCKET: 1
-          MDLPREFIX: mdl_
-          LANG: es
+      - ./local/example:/var/www/html/local/example
+      - ./theme/cursoscenedi33:/var/www/html/theme/cursoscenedi33
     ports:
-      - '3500:80'
-    depends_on:
-      - mariadb
-volumes:
-  data-volume:
+      - '${MOODLEPORT}:80'
+    environment:
+      XDEBUG_CONFIG: $XDEBUG_CONFIG
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      DBHOST: $DBHOST
+      MYSQL_DATABASE: $MYSQL_DATABASE
+      WWWROOT: $WWWROOT
+  adminer:
+    image: adminer
+    ports:
+      - '${ADMINERPORT}:8080'
